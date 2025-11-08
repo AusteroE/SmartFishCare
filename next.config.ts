@@ -2,12 +2,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  // Set workspace root to silence lockfile warning
-  experimental: {
-    turbo: {
-      root: process.cwd(),
-    },
-  },
   // Ensure service worker is accessible
   async headers() {
     return [
