@@ -1,0 +1,208 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  Int       @id @default(autoincrement())
+  username            String    @db.VarChar(50)
+  email               String    @unique @db.VarChar(100)
+  password            String    @db.VarChar(255)
+  profileImage        String    @default("frontend/img/default profile.png") @map("profile_image") @db.Text
+  phoneNumber         String?   @map("phone_number") @db.VarChar(20)
+  role                UserRole  @default(user)
+  emailVerified       Boolean   @default(false) @map("email_verified")
+  verificationToken   String?   @map("verification_token") @db.VarChar(255)
+  verificationExpires DateTime? @map("verification_expires")
+  otpCode             String?   @map("otp_code") @db.VarChar(100)
+  otpExpires          DateTime? @map("otp_expires")
+  lastSeen            DateTime? @map("last_seen")
+  createdAt           DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  stockingRecords     StockingRecord[]
+  harvestRecords      HarvestRecord[]
+  feedingRecords      FeedingRecord[]
+  fishDetections      FishDetection[]
+  emailVerificationLogs EmailVerificationLog[]
+  systemLogs          SystemLog[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  admin
+  user
+
+  @@map("users_role")
+}
+
+model SensorData {
+  id          Int       @id @default(autoincrement())
+  ph          Decimal?  @db.Decimal(5, 2)
+  temperature Decimal?  @db.Decimal(5, 2)
+  timestamp   DateTime  @default(now())
+
+  @@index([timestamp])
+  @@map("sensor_data")
+}
+
+model FishSizeRange {
+  id        Int      @id @default(autoincrement())
+  category  String   @unique @db.VarChar(50)
+  minLength Decimal  @map("min_length") @db.Decimal(5, 2)
+  maxLength Decimal  @map("max_length") @db.Decimal(5, 2)
+  minWidth  Decimal  @map("min_width") @db.Decimal(5, 2)
+  maxWidth  Decimal  @map("max_width") @db.Decimal(5, 2)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("fish_size_ranges")
+}
+
+model WaterParameter {
+  id          Int      @id @default(autoincrement())
+  parameterName String @unique @map("parameter_name") @db.VarChar(100)
+  normalMin   Decimal  @map("normal_min") @db.Decimal(5, 2)
+  normalMax   Decimal  @map("normal_max") @db.Decimal(5, 2)
+  dangerMin   Decimal? @map("danger_min") @db.Decimal(5, 2)
+  dangerMax   Decimal? @map("danger_max") @db.Decimal(5, 2)
+  unit        String   @db.VarChar(20)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("water_parameters")
+}
+
+model StockingRecord {
+  id             Int       @id @default(autoincrement())
+  userId         Int       @map("user_id")
+  fishType       String    @map("fish_type") @db.VarChar(100)
+  stockDate      DateTime  @map("stock_date")
+  aquariumNumber String    @map("aquarium_number") @db.VarChar(50)
+  quantity       Int?
+  notes          String?   @db.Text
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([stockDate])
+  @@index([aquariumNumber])
+  @@map("stocking_records")
+}
+
+model HarvestRecord {
+  id             Int       @id @default(autoincrement())
+  userId         Int       @map("user_id")
+  fishType       String    @map("fish_type") @db.VarChar(100)
+  quantity       Int
+  size           String    @db.VarChar(50)
+  harvestDate    DateTime  @map("harvest_date")
+  aquariumNumber String    @map("aquarium_number") @db.VarChar(50)
+  weight         Decimal?  @db.Decimal(8, 2)
+  notes          String?   @db.Text
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([harvestDate])
+  @@index([aquariumNumber])
+  @@map("harvest_records")
+}
+
+model FeedingRecord {
+  id          Int       @id @default(autoincrement())
+  userId      Int       @map("user_id")
+  fishSize    String    @map("fish_size") @db.VarChar(50)
+  foodType    String    @map("food_type") @db.VarChar(100)
+  feedingTime String    @map("feeding_time") @db.VarChar(8)
+  quantity    String?   @db.VarChar(50)
+  notes       String?   @db.Text
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([fishSize])
+  @@index([feedingTime])
+  @@map("feeding_records")
+}
+
+model FishDetection {
+  id                Int       @id @default(autoincrement())
+  userId            Int       @map("user_id")
+  detectedLength    Decimal   @map("detected_length") @db.Decimal(5, 2)
+  detectedWidth     Decimal   @map("detected_width") @db.Decimal(5, 2)
+  sizeCategory      String    @map("size_category") @db.VarChar(50)
+  confidenceScore    Decimal?  @map("confidence_score") @db.Decimal(3, 2)
+  detectionTimestamp DateTime @default(now()) @map("detection_timestamp")
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([sizeCategory])
+  @@index([detectionTimestamp])
+  @@index([userId, detectionTimestamp])
+  @@map("fish_detections")
+}
+
+model EmailVerificationLog {
+  id              Int       @id @default(autoincrement())
+  userId          Int       @map("user_id")
+  email           String    @db.VarChar(100)
+  verificationType VerificationType @map("verification_type")
+  token           String    @db.VarChar(255)
+  otpCode         String?   @map("otp_code") @db.VarChar(6)
+  expiresAt       DateTime  @map("expires_at")
+  used            Boolean   @default(false)
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([email])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("email_verification_logs")
+}
+
+enum VerificationType {
+  signup
+  password_reset
+  email_change
+
+  @@map("email_verification_logs_verification_type")
+}
+
+model SystemLog {
+  id        Int       @id @default(autoincrement())
+  userId    Int?      @map("user_id")
+  action    String    @db.VarChar(100)
+  tableName String?    @map("table_name") @db.VarChar(50)
+  recordId  Int?      @map("record_id")
+  oldValues Json?
+  newValues Json?
+  ipAddress String?   @map("ip_address") @db.VarChar(45)
+  userAgent String?   @map("user_agent") @db.Text
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("system_logs")
+}

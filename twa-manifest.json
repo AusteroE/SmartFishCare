@@ -1,0 +1,36 @@
+{
+    "packageId": "com.smartfishcare.app",
+    "name": "Smart Fish Care",
+    "launcherName": "SmartFish",
+    "display": "standalone",
+    "themeColor": "#7c5cff",
+    "navigationColor": "#0b1020",
+    "backgroundColor": "#0b1020",
+    "enableNotifications": true,
+    "startUrl": "/",
+    "iconUrl": "https://smartfishcare.site/icon-512.png",
+    "maskableIconUrl": "https://smartfishcare.site/icon-512.png",
+    "monochromeIconUrl": "https://smartfishcare.site/icon-512.png",
+    "splashScreenFadeOutDuration": 300,
+    "signingKey": {
+        "path": "./android.keystore",
+        "alias": "android"
+    },
+    "appVersionName": "1.0.0",
+    "appVersionCode": 1,
+    "shortcuts": [
+        {
+            "name": "Dashboard",
+            "shortName": "Dashboard",
+            "url": "/dashboard",
+            "icons": [
+                {
+                    "url": "https://smartfishcare.site/icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        }
+    ],
+    "generatorApp": "bubblewrap-cli",
+    "webManifestUrl": "https://smartfishcare.site/manifest.json"
+}

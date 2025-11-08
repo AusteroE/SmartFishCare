@@ -1,0 +1,248 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background: radial-gradient(1200px 600px at 20% -10%, rgba(124, 92, 255, 0.18), transparent),
+              radial-gradient(900px 500px at 100% 10%, rgba(76, 201, 240, 0.15), transparent),
+              #0b1020;
+  color: #e6e9ef;
+}
+
+@media (max-width: 768px) {
+  main {
+    margin-left: 0 !important;
+    padding: 1.25rem !important;
+  }
+}
+
+@media (min-width: 768px) {
+  main {
+    margin-left: 280px !important;
+  }
+}
+
+/* Mobile safe area support */
+@supports (padding: max(0px)) {
+  .safe-area-inset-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  
+  .safe-area-inset-top {
+    padding-top: max(0px, env(safe-area-inset-top));
+  }
+}
+
+/* Prevent text size adjustment on iOS */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Better touch targets for mobile */
+@media (max-width: 768px) {
+  button, a, input, select, textarea {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Fish Animation Styles */
+.fish-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.fish {
+  position: absolute;
+  opacity: 0.3;
+  filter: drop-shadow(0 0 8px rgba(124, 92, 255, 0.4));
+  z-index: 0;
+}
+
+.fish svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Fish swimming animations */
+@keyframes swim-right {
+  0% {
+    transform: translateX(-100px) translateY(0) scaleX(1);
+  }
+  50% {
+    transform: translateX(calc(50vw - 50px)) translateY(var(--swim-y, 0)) scaleX(1);
+  }
+  100% {
+    transform: translateX(calc(100vw + 100px)) translateY(0) scaleX(1);
+  }
+}
+
+@keyframes swim-left {
+  0% {
+    transform: translateX(calc(100vw + 100px)) translateY(0) scaleX(-1);
+  }
+  50% {
+    transform: translateX(calc(50vw - 50px)) translateY(var(--swim-y, 0)) scaleX(-1);
+  }
+  100% {
+    transform: translateX(-100px) translateY(0) scaleX(-1);
+  }
+}
+
+@keyframes swim-up {
+  0% {
+    transform: translateY(calc(100vh + 100px)) translateX(0) rotate(90deg);
+  }
+  50% {
+    transform: translateY(calc(50vh - 50px)) translateX(var(--swim-x, 0)) rotate(90deg);
+  }
+  100% {
+    transform: translateY(-100px) translateX(0) rotate(90deg);
+  }
+}
+
+@keyframes swim-down {
+  0% {
+    transform: translateY(-100px) translateX(0) rotate(-90deg);
+  }
+  50% {
+    transform: translateY(calc(50vh - 50px)) translateX(var(--swim-x, 0)) rotate(-90deg);
+  }
+  100% {
+    transform: translateY(calc(100vh + 100px)) translateX(0) rotate(-90deg);
+  }
+}
+
+@keyframes swim-diagonal {
+  0% {
+    transform: translateX(-100px) translateY(calc(100vh + 100px)) scaleX(1) rotate(-45deg);
+  }
+  100% {
+    transform: translateX(calc(100vw + 100px)) translateY(-100px) scaleX(1) rotate(-45deg);
+  }
+}
+
+@keyframes swim-diagonal-reverse {
+  0% {
+    transform: translateX(calc(100vw + 100px)) translateY(-100px) scaleX(-1) rotate(45deg);
+  }
+  100% {
+    transform: translateX(-100px) translateY(calc(100vh + 100px)) scaleX(-1) rotate(45deg);
+  }
+}
+
+/* Floating animation for depth */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.fish-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Individual fish animations */
+.fish-1 {
+  animation: swim-right 25s linear infinite;
+  width: 60px;
+  height: 40px;
+  top: 20%;
+  animation-delay: 0s;
+}
+
+.fish-2 {
+  animation: swim-left 30s linear infinite;
+  width: 80px;
+  height: 50px;
+  top: 40%;
+  animation-delay: 5s;
+  opacity: 0.25;
+}
+
+.fish-3 {
+  animation: swim-right 35s linear infinite;
+  width: 50px;
+  height: 35px;
+  top: 60%;
+  animation-delay: 10s;
+  opacity: 0.2;
+}
+
+.fish-4 {
+  animation: swim-diagonal 40s linear infinite;
+  width: 70px;
+  height: 45px;
+  animation-delay: 2s;
+  opacity: 0.2;
+}
+
+.fish-5 {
+  animation: swim-diagonal-reverse 45s linear infinite;
+  width: 55px;
+  height: 38px;
+  animation-delay: 15s;
+  opacity: 0.25;
+}
+
+.fish-6 {
+  animation: swim-left 28s linear infinite;
+  width: 65px;
+  height: 42px;
+  top: 75%;
+  animation-delay: 8s;
+  opacity: 0.2;
+}
+
+.fish-7 {
+  animation: swim-right 32s linear infinite;
+  width: 45px;
+  height: 30px;
+  top: 10%;
+  animation-delay: 12s;
+  opacity: 0.15;
+}
+
+.fish-8 {
+  animation: swim-diagonal 38s linear infinite;
+  width: 75px;
+  height: 48px;
+  animation-delay: 18s;
+  opacity: 0.2;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .fish {
+    animation: none !important;
+    opacity: 0.1;
+  }
+}
