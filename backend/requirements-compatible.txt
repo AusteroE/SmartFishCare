@@ -1,0 +1,12 @@
+# TensorFlow 2.x with compatibility mode for TensorFlow 1.x models
+# Works with Python 3.8-3.11
+tensorflow>=2.10.0,<2.16.0
+flask==2.3.3
+flask-cors==4.0.0
+Pillow==10.0.0
+numpy>=1.19.5,<1.25.0
+
+# Alternative: If you need TensorFlow 1.15.0 specifically, use Python 3.7:
+# tensorflow==1.15.0
+# numpy==1.19.5
+

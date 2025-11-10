@@ -12,8 +12,23 @@ interface SensorData {
 export default function DashboardPage() {
   const [sensorData, setSensorData] = useState<SensorData>({ ph: null, temperature: null });
   const [connectionStatus, setConnectionStatus] = useState(true);
-  const [cameraModalOpen, setCameraModalOpen] = useState(false);
   const [lastDataTimestamp, setLastDataTimestamp] = useState<number>(Date.now());
+  const [harvestThreshold, setHarvestThreshold] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('fish_harvest_threshold');
+      return saved ? parseFloat(saved) : 15.0;
+    }
+    return 15.0;
+  });
+  const [harvestWidthThreshold, setHarvestWidthThreshold] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('fish_harvest_width_threshold');
+      return saved ? parseFloat(saved) : 5.0;
+    }
+    return 5.0;
+  });
+  const [savingThresholds, setSavingThresholds] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
     // Fetch initial data immediately (before SSE connects)
@@ -220,6 +235,25 @@ export default function DashboardPage() {
   const phStatus = interpretPHStatus(sensorData.ph);
   const tempStatus = interpretTemperatureStatus(sensorData.temperature);
 
+  const handleSaveThresholds = () => {
+    setSavingThresholds(true);
+    setSaveSuccess(false);
+
+    // Save to localStorage
+    localStorage.setItem('fish_harvest_threshold', harvestThreshold.toString());
+    localStorage.setItem('fish_harvest_width_threshold', harvestWidthThreshold.toString());
+
+    // Show success message
+    setSaveSuccess(true);
+    setSavingThresholds(false);
+
+    // Hide success message after 3 seconds
+    setTimeout(() => {
+      setSaveSuccess(false);
+    }, 3000);
+  };
+
+
   return (
     <>
       <header className="text-center mb-6 sm:mb-10">
@@ -251,12 +285,91 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 pt-5 pb-10 md:pb-0">
+      {/* Harvest Threshold Configuration Section - Collapsible */}
+      <div className="mb-6 sm:mb-8 bg-gradient-to-b from-white/6 to-white/2 border border-white/8 rounded-xl sm:rounded-2xl p-4 sm:p-5 backdrop-blur-sm shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg sm:text-xl font-bold text-[#e6e9ef] flex items-center gap-2">
+            <i className="fas fa-ruler text-yellow-500"></i>
+            <span>Harvest Threshold Settings</span>
+          </h2>
+          <button
+            onClick={handleSaveThresholds}
+            disabled={savingThresholds}
+            className="px-4 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg text-xs sm:text-sm font-semibold hover:from-yellow-600 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl flex items-center gap-2"
+          >
+            {savingThresholds ? (
+              <>
+                <i className="fas fa-spinner fa-spin text-xs"></i>
+                <span>Saving...</span>
+              </>
+            ) : (
+              <>
+                <i className="fas fa-save text-xs"></i>
+                <span>Save</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+          <div className="space-y-1.5">
+            <label className="flex items-center gap-1.5 text-xs sm:text-sm text-[#e6e9ef] font-medium">
+              <i className="fas fa-ruler-horizontal text-blue-500 text-xs"></i>
+              <span>Length (cm)</span>
+            </label>
+            <input
+              type="number"
+              min="5"
+              max="50"
+              step="0.5"
+              value={harvestThreshold}
+              onChange={(e) => {
+                const threshold = Math.max(5, Math.min(50, parseFloat(e.target.value) || 15));
+                setHarvestThreshold(threshold);
+              }}
+              className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-sm text-[#e6e9ef] outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500/20 transition-all"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="flex items-center gap-1.5 text-xs sm:text-sm text-[#e6e9ef] font-medium">
+              <i className="fas fa-ruler-vertical text-blue-500 text-xs"></i>
+              <span>Width (cm)</span>
+            </label>
+            <input
+              type="number"
+              min="2"
+              max="20"
+              step="0.5"
+              value={harvestWidthThreshold}
+              onChange={(e) => {
+                const threshold = Math.max(2, Math.min(20, parseFloat(e.target.value) || 5));
+                setHarvestWidthThreshold(threshold);
+              }}
+              className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-sm text-[#e6e9ef] outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500/20 transition-all"
+            />
+          </div>
+        </div>
+
+        {saveSuccess && (
+          <div className="mt-3 flex items-center gap-2 text-green-400 text-xs sm:text-sm">
+            <i className="fas fa-check-circle"></i>
+            <span>Thresholds saved successfully!</span>
+          </div>
+        )}
+      </div>
+
+
+      {/* Sensor Data Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
         {/* Water Temperature Card */}
-        <div className="bg-gradient-to-b from-white/6 to-white/2 border border-white/8 rounded-xl sm:rounded-2xl p-5 sm:p-8 min-h-[180px] sm:min-h-[200px] md:min-h-[180px] backdrop-blur-sm shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
-          <h3 className="text-lg sm:text-xl font-semibold text-[#e6e9ef] mb-3 sm:mb-4 md:mb-5">Water Temperature</h3>
-          <div className="text-center py-2 pb-3 sm:pb-2">
-            <div className={`text-3xl sm:text-4xl font-bold ${tempStatus.color === 'green' ? 'text-green-500' :
+        <div className="bg-gradient-to-b from-white/6 to-white/2 border border-white/8 rounded-xl sm:rounded-2xl p-5 sm:p-6 backdrop-blur-sm shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-base sm:text-lg font-semibold text-[#e6e9ef]">Water Temperature</h3>
+            <i className="fas fa-thermometer-half text-2xl text-blue-400"></i>
+          </div>
+          <div className="text-center">
+            <div className={`text-4xl sm:text-5xl font-bold mb-2 ${tempStatus.color === 'green' ? 'text-green-500' :
               tempStatus.color === 'orange' ? 'text-orange-500' :
                 tempStatus.color === 'red' ? 'text-red-500' :
                   'text-gray-500'
@@ -266,32 +379,23 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Fish Sizes Card */}
-        <div className="bg-gradient-to-b from-white/6 to-white/2 border border-white/8 rounded-xl sm:rounded-2xl p-5 sm:p-8 min-h-[180px] sm:min-h-[200px] md:min-h-[180px] backdrop-blur-sm shadow-[0_10px_30px_rgba(0,0,0,0.35)] cursor-pointer hover:scale-105 transition-transform"
-          onClick={() => setCameraModalOpen(true)}>
-          <h3 className="text-lg sm:text-xl font-semibold text-[#e6e9ef] mb-3 sm:mb-4 md:mb-5">Fish Sizes</h3>
-          <div className="flex flex-col items-center justify-center h-full">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#7c5cff]/20 rounded-full flex items-center justify-center mb-3">
-              <i className="fas fa-camera text-2xl sm:text-3xl text-[#7c5cff]"></i>
-            </div>
-            <p className="text-[#a2a8b6] text-xs sm:text-sm">Connect your Web cam</p>
-          </div>
-        </div>
-
         {/* Water Quality Level Card */}
-        <div className="bg-gradient-to-b from-white/6 to-white/2 border border-white/8 rounded-xl sm:rounded-2xl p-5 sm:p-8 min-h-[180px] sm:min-h-[200px] md:min-h-[180px] backdrop-blur-sm shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
-          <h3 className="text-lg sm:text-xl font-semibold text-[#e6e9ef] mb-3 sm:mb-4 md:mb-5">Water Quality Level</h3>
-          <div className="text-center py-2 pb-3 sm:pb-2">
+        <div className="bg-gradient-to-b from-white/6 to-white/2 border border-white/8 rounded-xl sm:rounded-2xl p-5 sm:p-6 backdrop-blur-sm shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-base sm:text-lg font-semibold text-[#e6e9ef]">Water Quality (pH)</h3>
+            <i className="fas fa-flask text-2xl text-purple-400"></i>
+          </div>
+          <div className="text-center">
             {sensorData.ph !== null && !isNaN(sensorData.ph) ? (
               <>
-                <div className={`text-3xl sm:text-4xl font-bold ${phStatus.color === 'green' ? 'text-green-500' :
+                <div className={`text-4xl sm:text-5xl font-bold mb-2 ${phStatus.color === 'green' ? 'text-green-500' :
                   phStatus.color === 'orange' ? 'text-orange-500' :
                     phStatus.color === 'red' ? 'text-red-500' :
                       'text-gray-500'
                   }`}>
                   {sensorData.ph.toFixed(2)}
                 </div>
-                <div className={`text-sm sm:text-base mt-2 mb-1 ${phStatus.color === 'green' ? 'text-green-400' :
+                <div className={`text-sm font-medium ${phStatus.color === 'green' ? 'text-green-400' :
                   phStatus.color === 'orange' ? 'text-orange-400' :
                     phStatus.color === 'red' ? 'text-red-400' :
                       'text-gray-400'
@@ -306,7 +410,13 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <FishDetectionModal isOpen={cameraModalOpen} onClose={() => setCameraModalOpen(false)} />
+      {/* Fish Detection Section - Directly on Dashboard */}
+      <div className="mb-10">
+        <FishDetectionModal
+          harvestThreshold={harvestThreshold}
+          harvestWidthThreshold={harvestWidthThreshold}
+        />
+      </div>
     </>
   );
 }

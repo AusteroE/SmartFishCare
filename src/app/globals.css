@@ -19,25 +19,20 @@
   }
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body {
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   background: radial-gradient(1200px 600px at 20% -10%, rgba(124, 92, 255, 0.18), transparent),
               radial-gradient(900px 500px at 100% 10%, rgba(76, 201, 240, 0.15), transparent),
               #0b1020;
   color: #e6e9ef;
-}
-
-@media (max-width: 768px) {
-  main {
-    margin-left: 0 !important;
-    padding: 1.25rem !important;
-  }
-}
-
-@media (min-width: 768px) {
-  main {
-    margin-left: 280px !important;
-  }
+  margin: 0;
+  padding: 0;
 }
 
 /* Mobile safe area support */
@@ -87,6 +82,7 @@ html {
 .fish svg {
   width: 100%;
   height: 100%;
+  transform: scaleX(-1); /* Flip fish horizontally */
 }
 
 /* Fish swimming animations */

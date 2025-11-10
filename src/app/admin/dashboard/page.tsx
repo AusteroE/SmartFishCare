@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
 import { getProfileImageUrl } from '@/lib/upload';
 
@@ -29,9 +28,12 @@ export default function AdminDashboardPage() {
     const [stats, setStats] = useState<UserStats>({ total: 0, admins: 0, users: 0 });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
 
     useEffect(() => {
         fetchUsers(true);
+        // Refresh users every 30 seconds to update online status
         const interval = setInterval(() => {
             fetchUsers(false);
         }, 30000);
@@ -75,182 +77,237 @@ export default function AdminDashboardPage() {
         });
     };
 
+    // Calculate pagination
+    const totalPages = Math.ceil(users.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedUsers = users.slice(startIndex, endIndex);
+
+    // Reset to page 1 when users change
+    useEffect(() => {
+        if (users.length > 0 && currentPage > totalPages) {
+            setCurrentPage(1);
+        }
+    }, [users.length, currentPage, totalPages]);
+
+    const handlePreviousPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+        }
+    };
+
+    const handleNextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(currentPage + 1);
+        }
+    };
+
     return (
         <DashboardLayout>
-            <div className="w-full space-y-6 md:space-y-8">
+            <div className="w-full flex flex-col gap-2 overflow-hidden flex-1 min-h-0">
                 {/* Header */}
-                <header>
-                    <h1 className="text-3xl md:text-4xl font-extrabold text-[#e6e9ef] mb-2">
+                <header className="shrink-0">
+                    <h1 className="text-xl md:text-2xl font-extrabold text-[#e6e9ef]">
                         Admin Dashboard
                     </h1>
-
                 </header>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                    <div className="bg-linear-to-b from-white/6 to-white/2 border border-white/8 rounded-xl p-6 backdrop-blur-sm shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
+                <div className="grid grid-cols-3 gap-2 shrink-0">
+                    <div className="bg-linear-to-b from-white/6 to-white/2 border border-white/8 rounded-lg p-3 backdrop-blur-sm shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
                         <div className="flex items-center justify-between">
                             <div>
-                                <h3 className="text-sm text-[#a2a8b6] mb-2">Total Users</h3>
-                                <p className="text-3xl font-bold text-[#e6e9ef]">{stats.total}</p>
+                                <h3 className="text-[10px] text-[#a2a8b6] mb-0.5">Total Users</h3>
+                                <p className="text-xl font-bold text-[#e6e9ef]">{stats.total}</p>
                             </div>
-                            <div className="w-14 h-14 bg-[#7c5cff]/20 rounded-full flex items-center justify-center shrink-0">
-                                <i className="fas fa-users text-2xl text-[#7c5cff]"></i>
+                            <div className="w-8 h-8 bg-[#7c5cff]/20 rounded-full flex items-center justify-center shrink-0">
+                                <i className="fas fa-users text-lg text-[#7c5cff]"></i>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-linear-to-b from-white/6 to-white/2 border border-white/8 rounded-xl p-6 backdrop-blur-sm shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
+                    <div className="bg-linear-to-b from-white/6 to-white/2 border border-white/8 rounded-lg p-3 backdrop-blur-sm shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
                         <div className="flex items-center justify-between">
                             <div>
-                                <h3 className="text-sm text-[#a2a8b6] mb-2">Admins</h3>
-                                <p className="text-3xl font-bold text-[#e6e9ef]">{stats.admins}</p>
+                                <h3 className="text-[10px] text-[#a2a8b6] mb-0.5">Admins</h3>
+                                <p className="text-xl font-bold text-[#e6e9ef]">{stats.admins}</p>
                             </div>
-                            <div className="w-14 h-14 bg-[#7c5cff]/20 rounded-full flex items-center justify-center shrink-0">
-                                <i className="fas fa-user-shield text-2xl text-[#7c5cff]"></i>
+                            <div className="w-8 h-8 bg-[#7c5cff]/20 rounded-full flex items-center justify-center shrink-0">
+                                <i className="fas fa-user-shield text-lg text-[#7c5cff]"></i>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-linear-to-b from-white/6 to-white/2 border border-white/8 rounded-xl p-6 backdrop-blur-sm shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
+                    <div className="bg-linear-to-b from-white/6 to-white/2 border border-white/8 rounded-lg p-3 backdrop-blur-sm shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
                         <div className="flex items-center justify-between">
                             <div>
-                                <h3 className="text-sm text-[#a2a8b6] mb-2">Regular Users</h3>
-                                <p className="text-3xl font-bold text-[#e6e9ef]">{stats.users}</p>
+                                <h3 className="text-[10px] text-[#a2a8b6] mb-0.5">Regular Users</h3>
+                                <p className="text-xl font-bold text-[#e6e9ef]">{stats.users}</p>
                             </div>
-                            <div className="w-14 h-14 bg-[#7c5cff]/20 rounded-full flex items-center justify-center shrink-0">
-                                <i className="fas fa-user text-2xl text-[#7c5cff]"></i>
+                            <div className="w-8 h-8 bg-[#7c5cff]/20 rounded-full flex items-center justify-center shrink-0">
+                                <i className="fas fa-user text-lg text-[#7c5cff]"></i>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Users Table Section */}
-                <div className="bg-linear-to-b from-white/6 to-white/2 border border-white/8 rounded-xl p-6 md:p-8 backdrop-blur-sm shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-                        <h2 className="text-xl md:text-2xl font-bold text-[#e6e9ef]">User List</h2>
-                        <div className="flex gap-3 w-full sm:w-auto">
-                            <Link
-                                href="/admin/admins/create"
-                                className="flex-1 sm:flex-none px-5 py-2.5 bg-linear-to-r from-purple-600 to-purple-500 text-white rounded-lg text-sm font-semibold hover:from-purple-700 hover:to-purple-600 transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
-                            >
-                                <i className="fas fa-user-shield text-xs"></i>
-                                <span>Create Admin</span>
-                            </Link>
-                            <Link
-                                href="/admin/users/create"
-                                className="flex-1 sm:flex-none px-5 py-2.5 bg-linear-to-r from-[#7c5cff] to-[#4cc9f0] text-white rounded-lg text-sm font-semibold hover:from-[#6b4ce6] hover:to-[#3db8d9] transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
-                            >
-                                <i className="fas fa-user-plus text-xs"></i>
-                                <span>Create User</span>
-                            </Link>
-                        </div>
+                <div className="bg-linear-to-b from-white/6 to-white/2 border border-white/8 rounded-lg p-3 backdrop-blur-sm shadow-[0_10px_30px_rgba(0,0,0,0.35)] flex flex-col  min-h-0 overflow-hidden">
+                    <div className="shrink-0 mb-2">
+                        <h2 className="text-base md:text-lg font-bold text-[#e6e9ef]">User List</h2>
                     </div>
 
-                    {loading ? (
-                        <div className="text-center py-10">
-                            <i className="fas fa-spinner fa-spin text-2xl text-[#7c5cff] mb-3"></i>
-                            <p className="text-[#a2a8b6]">Loading users...</p>
-                        </div>
-                    ) : error ? (
-                        <div className="text-center py-10">
-                            <i className="fas fa-exclamation-circle text-2xl text-red-500 mb-3"></i>
-                            <p className="text-red-400 mb-4">{error}</p>
-                            <button
-                                onClick={() => fetchUsers(true)}
-                                className="px-4 py-2 bg-[#7c5cff] text-white rounded-lg hover:bg-[#6b4ce6] transition-colors text-sm"
-                            >
-                                <i className="fas fa-redo mr-2"></i>Retry
-                            </button>
-                        </div>
-                    ) : users.length === 0 ? (
-                        <div className="text-center py-10">
-                            <i className="fas fa-users text-3xl text-[#a2a8b6] mb-3"></i>
-                            <p className="text-[#a2a8b6]">No users found</p>
-                        </div>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full min-w-[800px]">
-                                <thead>
-                                    <tr className="border-b border-white/10">
-                                        <th className="text-left py-4 px-4 text-xs md:text-sm text-[#a2a8b6] font-semibold w-[10%]">
-                                            Profile
-                                        </th>
-                                        <th className="text-left py-4 px-4 text-xs md:text-sm text-[#a2a8b6] font-semibold w-[18%]">
-                                            Username
-                                        </th>
-                                        <th className="text-left py-4 px-4 text-xs md:text-sm text-[#a2a8b6] font-semibold w-[30%]">
-                                            Email
-                                        </th>
-                                        <th className="text-left py-4 px-4 text-xs md:text-sm text-[#a2a8b6] font-semibold w-[12%]">
-                                            Role
-                                        </th>
-                                        <th className="text-left py-4 px-4 text-xs md:text-sm text-[#a2a8b6] font-semibold w-[12%]">
-                                            Status
-                                        </th>
-                                        <th className="text-left py-4 px-4 text-xs md:text-sm text-[#a2a8b6] font-semibold w-[18%]">
-                                            Joined
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {users.map((user) => (
-                                        <tr key={user.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                                            <td className="py-4 px-4">
-                                                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/10 shrink-0">
-                                                    <Image
-                                                        src={getProfileImageUrl(user.profile_image)}
-                                                        alt={user.username}
-                                                        width={40}
-                                                        height={40}
-                                                        className="w-full h-full object-cover"
-                                                        onError={(e) => {
-                                                            e.currentTarget.src = '/frontend/img/default profile.png';
-                                                        }}
-                                                    />
-                                                </div>
-                                            </td>
-                                            <td className="py-4 px-4">
-                                                <div className="text-sm text-[#e6e9ef] font-medium min-w-0">
-                                                    {user.username}
-                                                </div>
-                                            </td>
-                                            <td className="py-4 px-4">
-                                                <div className="text-sm text-[#a2a8b6] min-w-0 truncate" title={user.email}>
-                                                    {user.email}
-                                                </div>
-                                            </td>
-                                            <td className="py-4 px-4">
-                                                <span
-                                                    className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap ${user.role === 'admin'
-                                                        ? 'bg-purple-500/20 text-purple-300'
-                                                        : 'bg-blue-500/20 text-blue-300'
-                                                        }`}
-                                                >
-                                                    {user.role === 'admin' ? 'Admin' : 'User'}
-                                                </span>
-                                            </td>
-                                            <td className="py-4 px-4">
-                                                <span
-                                                    className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap ${user.is_online
-                                                        ? 'bg-green-500/20 text-green-300'
-                                                        : 'bg-gray-500/20 text-gray-300'
-                                                        }`}
-                                                >
-                                                    {user.is_online ? 'ONLINE' : 'OFFLINE'}
-                                                </span>
-                                            </td>
-                                            <td className="py-4 px-4 text-sm text-[#a2a8b6] whitespace-nowrap">
-                                                {formatDate(user.created_at)}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
+                    <div className="flex-1 min-h-0 overflow-hidden">
+                        {loading ? (
+                            <div className="text-center py-8 flex items-center justify-center h-full">
+                                <div>
+                                    <i className="fas fa-spinner fa-spin text-xl text-[#7c5cff] mb-2"></i>
+                                    <p className="text-sm text-[#a2a8b6]">Loading users...</p>
+                                </div>
+                            </div>
+                        ) : error ? (
+                            <div className="text-center py-8 flex items-center justify-center h-full">
+                                <div>
+                                    <i className="fas fa-exclamation-circle text-xl text-red-500 mb-2"></i>
+                                    <p className="text-sm text-red-400 mb-3">{error}</p>
+                                    <button
+                                        onClick={() => fetchUsers(true)}
+                                        className="px-3 py-1.5 bg-[#7c5cff] text-white rounded-lg hover:bg-[#6b4ce6] transition-colors text-xs"
+                                    >
+                                        <i className="fas fa-redo mr-1.5"></i>Retry
+                                    </button>
+                                </div>
+                            </div>
+                        ) : users.length === 0 ? (
+                            <div className="text-center py-8 flex items-center justify-center h-full">
+                                <div>
+                                    <i className="fas fa-users text-2xl text-[#a2a8b6] mb-2"></i>
+                                    <p className="text-sm text-[#a2a8b6]">No users found</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="flex-1 min-h-0 overflow-auto">
+                                    <table className="w-full">
+                                        <thead className="sticky top-0 bg-[#0b1020]/95 backdrop-blur-sm z-10">
+                                            <tr className="border-b border-white/10">
+                                                <th className="text-left py-2 px-2 text-[10px] text-[#a2a8b6] font-semibold">
+                                                    Profile
+                                                </th>
+                                                <th className="text-left py-2 px-2 text-[10px] text-[#a2a8b6] font-semibold">
+                                                    Username
+                                                </th>
+                                                <th className="text-left py-2 px-2 text-[10px] text-[#a2a8b6] font-semibold">
+                                                    Email
+                                                </th>
+                                                <th className="text-left py-2 px-2 text-[10px] text-[#a2a8b6] font-semibold">
+                                                    Role
+                                                </th>
+                                                <th className="text-left py-2 px-2 text-[10px] text-[#a2a8b6] font-semibold">
+                                                    Status
+                                                </th>
+                                                <th className="text-left py-2 px-2 text-[10px] text-[#a2a8b6] font-semibold">
+                                                    Joined
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {paginatedUsers.map((user) => (
+                                                <tr key={user.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                                                    <td className="py-2 px-2">
+                                                        <div className="w-7 h-7 rounded-full overflow-hidden border-2 border-white/10 shrink-0">
+                                                            <Image
+                                                                src={getProfileImageUrl(user.profile_image)}
+                                                                alt={user.username}
+                                                                width={28}
+                                                                height={28}
+                                                                className="w-full h-full object-cover"
+                                                                onError={(e) => {
+                                                                    e.currentTarget.src = '/frontend/img/default profile.png';
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-2 px-2">
+                                                        <div className="text-[11px] text-[#e6e9ef] font-medium min-w-0">
+                                                            {user.username}
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-2 px-2">
+                                                        <div className="text-[11px] text-[#a2a8b6] min-w-0 truncate" title={user.email}>
+                                                            {user.email}
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-2 px-2">
+                                                        <span
+                                                            className={`inline-block px-1.5 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap ${user.role === 'admin'
+                                                                ? 'bg-purple-500/20 text-purple-300'
+                                                                : 'bg-blue-500/20 text-blue-300'
+                                                                }`}
+                                                        >
+                                                            {user.role === 'admin' ? 'Admin' : 'User'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-2 px-2">
+                                                        <span
+                                                            className={`inline-block px-1.5 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap ${user.is_online
+                                                                ? 'bg-green-500/20 text-green-300'
+                                                                : 'bg-gray-500/20 text-gray-300'
+                                                                }`}
+                                                        >
+                                                            {user.is_online ? 'ONLINE' : 'OFFLINE'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-2 px-2 text-[11px] text-[#a2a8b6] whitespace-nowrap">
+                                                        {formatDate(user.created_at)}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                {/* Pagination Controls */}
+                                {users.length > itemsPerPage && (
+                                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/10 shrink-0">
+                                        <div className="text-[11px] text-[#a2a8b6]">
+                                            Showing {startIndex + 1} to {Math.min(endIndex, users.length)} of {users.length} users
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={handlePreviousPage}
+                                                disabled={currentPage === 1}
+                                                className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition-colors ${currentPage === 1
+                                                    ? 'bg-white/5 text-[#a2a8b6] cursor-not-allowed opacity-50'
+                                                    : 'bg-[#7c5cff]/20 text-[#7c5cff] hover:bg-[#7c5cff]/30'
+                                                    }`}
+                                            >
+                                                <i className="fas fa-chevron-left mr-1"></i>
+                                                Previous
+                                            </button>
+                                            <span className="text-[11px] text-[#e6e9ef] font-medium px-2">
+                                                Page {currentPage} of {totalPages}
+                                            </span>
+                                            <button
+                                                onClick={handleNextPage}
+                                                disabled={currentPage === totalPages}
+                                                className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition-colors ${currentPage === totalPages
+                                                    ? 'bg-white/5 text-[#a2a8b6] cursor-not-allowed opacity-50'
+                                                    : 'bg-[#7c5cff]/20 text-[#7c5cff] hover:bg-[#7c5cff]/30'
+                                                    }`}
+                                            >
+                                                Next
+                                                <i className="fas fa-chevron-right ml-1"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
         </DashboardLayout>
     );
 }
+

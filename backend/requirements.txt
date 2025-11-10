@@ -1,0 +1,8 @@
+# TensorFlow 2.x with compatibility mode for TensorFlow 1.x models
+# Works with Python 3.8-3.11
+tensorflow>=2.10.0
+flask==2.3.3
+flask-cors==4.0.0
+Pillow>=10.0.0
+numpy>=1.19.5
+

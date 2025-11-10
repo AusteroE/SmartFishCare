@@ -18,10 +18,6 @@ export async function GET(request: NextRequest) {
                 return getFishRanges();
             case 'get_water_params':
                 return getWaterParams();
-            case 'get_stocking':
-                return getStockingRecords(userId);
-            case 'get_harvest':
-                return getHarvestRecords(userId);
             case 'get_feeding':
                 return getFeedingRecords(userId);
             default:
@@ -48,14 +44,6 @@ export async function POST(request: NextRequest) {
         const action = body.action;
 
         switch (action) {
-            case 'add_stocking':
-                return addStockingRecord(userId, body);
-            case 'delete_stocking':
-                return deleteStockingRecord(userId, body);
-            case 'add_harvest':
-                return addHarvestRecord(userId, body);
-            case 'delete_harvest':
-                return deleteHarvestRecord(userId, body);
             case 'add_feeding':
                 return addFeedingRecord(userId, body);
             case 'delete_feeding':
@@ -111,170 +99,6 @@ async function getWaterParams() {
             created_at: param.createdAt.toISOString().replace('T', ' ').slice(0, 19),
             updated_at: param.updatedAt.toISOString().replace('T', ' ').slice(0, 19),
         })),
-    });
-}
-
-async function addStockingRecord(userId: number, body: any) {
-    const { fish_type, stock_date, aquarium_number, quantity, notes } = body;
-
-    if (!fish_type || !stock_date || !aquarium_number) {
-        return NextResponse.json(
-            { success: false, message: 'Required fields missing' },
-            { status: 400 }
-        );
-    }
-
-    const record = await prisma.stockingRecord.create({
-        data: {
-            userId,
-            fishType: fish_type,
-            stockDate: new Date(stock_date),
-            aquariumNumber: aquarium_number,
-            quantity: quantity ? parseInt(quantity) : null,
-            notes: notes || null,
-        },
-    });
-
-    return NextResponse.json({
-        success: true,
-        message: 'Stocking record added successfully',
-        data: record,
-    });
-}
-
-async function getStockingRecords(userId: number) {
-    const records = await prisma.stockingRecord.findMany({
-        where: { userId },
-        orderBy: { stockDate: 'desc' },
-    });
-
-    return NextResponse.json({
-        success: true,
-        data: records.map((r: any) => ({
-            id: r.id,
-            user_id: r.userId,
-            fish_type: r.fishType,
-            stock_date: r.stockDate.toISOString().split('T')[0],
-            aquarium_number: r.aquariumNumber,
-            quantity: r.quantity,
-            notes: r.notes,
-            created_at: r.createdAt.toISOString().replace('T', ' ').slice(0, 19),
-            updated_at: r.updatedAt.toISOString().replace('T', ' ').slice(0, 19),
-        })),
-    });
-}
-
-async function deleteStockingRecord(userId: number, body: any) {
-    const { record_id } = body;
-
-    if (!record_id) {
-        return NextResponse.json(
-            { success: false, message: 'Record ID required' },
-            { status: 400 }
-        );
-    }
-
-    const deleted = await prisma.stockingRecord.deleteMany({
-        where: {
-            id: parseInt(record_id),
-            userId,
-        },
-    });
-
-    if (deleted.count === 0) {
-        return NextResponse.json(
-            { success: false, message: 'Record not found or access denied' },
-            { status: 404 }
-        );
-    }
-
-    return NextResponse.json({
-        success: true,
-        message: 'Stocking record deleted successfully',
-    });
-}
-
-async function addHarvestRecord(userId: number, body: any) {
-    const { fish_type, quantity, size, harvest_date, aquarium_number, weight, notes } = body;
-
-    if (!fish_type || !harvest_date || !aquarium_number) {
-        return NextResponse.json(
-            { success: false, message: 'Required fields missing' },
-            { status: 400 }
-        );
-    }
-
-    const record = await prisma.harvestRecord.create({
-        data: {
-            userId,
-            fishType: fish_type,
-            quantity: parseInt(quantity) || 0,
-            size: size || 'Medium',
-            harvestDate: new Date(harvest_date),
-            aquariumNumber: aquarium_number,
-            weight: weight ? parseFloat(weight) : null,
-            notes: notes || null,
-        },
-    });
-
-    return NextResponse.json({
-        success: true,
-        message: 'Harvest record added successfully',
-        data: record,
-    });
-}
-
-async function getHarvestRecords(userId: number) {
-    const records = await prisma.harvestRecord.findMany({
-        where: { userId },
-        orderBy: { harvestDate: 'desc' },
-    });
-
-    return NextResponse.json({
-        success: true,
-        data: records.map((r: any) => ({
-            id: r.id,
-            user_id: r.userId,
-            fish_type: r.fishType,
-            quantity: r.quantity,
-            size: r.size,
-            harvest_date: r.harvestDate.toISOString().split('T')[0],
-            aquarium_number: r.aquariumNumber,
-            weight: r.weight ? Number(r.weight) : null,
-            notes: r.notes,
-            created_at: r.createdAt.toISOString().replace('T', ' ').slice(0, 19),
-            updated_at: r.updatedAt.toISOString().replace('T', ' ').slice(0, 19),
-        })),
-    });
-}
-
-async function deleteHarvestRecord(userId: number, body: any) {
-    const { record_id } = body;
-
-    if (!record_id) {
-        return NextResponse.json(
-            { success: false, message: 'Record ID required' },
-            { status: 400 }
-        );
-    }
-
-    const deleted = await prisma.harvestRecord.deleteMany({
-        where: {
-            id: parseInt(record_id),
-            userId,
-        },
-    });
-
-    if (deleted.count === 0) {
-        return NextResponse.json(
-            { success: false, message: 'Record not found or access denied' },
-            { status: 404 }
-        );
-    }
-
-    return NextResponse.json({
-        success: true,
-        message: 'Harvest record deleted successfully',
     });
 }
 

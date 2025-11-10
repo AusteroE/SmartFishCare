@@ -28,7 +28,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Save detection to database
         // Convert confidence from percentage (0-100) to decimal (0-1) if needed
         let confidenceDecimal: number | null = null;
         if (confidence !== null && confidence !== undefined) {
@@ -40,6 +39,49 @@ export async function POST(request: NextRequest) {
             confidenceDecimal = Math.max(0, Math.min(1, confidenceDecimal));
         }
 
+        // For large fish, check if we already have a detection today (limit: one per day)
+        if (category === 'Large') {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Start of today (00:00:00)
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1); // Start of tomorrow (00:00:00)
+
+            const existingLargeFish = await prisma.fishDetection.findFirst({
+                where: {
+                    userId: userId,
+                    sizeCategory: 'Large',
+                    detectionTimestamp: {
+                        gte: today,
+                        lt: tomorrow,
+                    },
+                },
+                orderBy: {
+                    detectionTimestamp: 'desc',
+                },
+            });
+
+            if (existingLargeFish) {
+                // Update the existing record with the latest detection data
+                const updated = await prisma.fishDetection.update({
+                    where: { id: existingLargeFish.id },
+                    data: {
+                        detectedLength: parseFloat(length.toString()),
+                        detectedWidth: parseFloat(width.toString()),
+                        confidenceScore: confidenceDecimal,
+                        detectionTimestamp: new Date(), // Update timestamp to latest detection time
+                    },
+                });
+
+                return NextResponse.json({
+                    success: true,
+                    message: 'Large fish detection updated (one per day limit)',
+                    data: updated,
+                    updated: true,
+                });
+            }
+        }
+
+        // For non-large fish or if no large fish exists today, create new record
         const detection = await prisma.fishDetection.create({
             data: {
                 userId: userId,

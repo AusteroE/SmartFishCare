@@ -107,8 +107,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             />
 
             {/* Main Content */}
-            <main className={`flex-1 md:ml-[280px] bg-transparent min-h-screen pb-32 md:pb-10 ${pathname?.startsWith('/admin') ? 'pt-4 sm:pt-6 md:pt-8 lg:pt-10 pr-4 sm:pr-6 md:pr-8 lg:pr-10 pb-4 sm:pb-6 md:pb-8 lg:pb-10' : 'p-4 sm:p-6 md:p-8 lg:p-10'}`}>
-                <div className={`${pathname?.startsWith('/admin') ? 'w-full pl-4 sm:pl-6 md:pl-8 lg:pl-10' : 'max-w-7xl mx-auto'}`}>
+            <main className={`bg-transparent ${pathname?.startsWith('/dashboard/analytics') || pathname?.startsWith('/admin/dashboard')
+                ? 'md:ml-[140px] min-h-screen overflow-y-auto pb-32 md:pb-10 p-4 sm:p-6 md:p-8 lg:p-10'
+                : pathname?.startsWith('/admin')
+                    ? 'md:ml-[280px] h-screen overflow-hidden p-[50px]'
+                    : 'md:ml-[280px] min-h-screen overflow-y-auto pb-32 md:pb-10 p-4 sm:p-6 md:p-8 lg:p-10'
+                }`}>
+                <div className={`${pathname?.startsWith('/admin') ? 'h-full flex flex-col w-full' : 'h-full flex flex-col max-w-7xl mx-auto'}`}>
                     {children}
                 </div>
             </main>

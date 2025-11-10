@@ -30,12 +30,14 @@ export function getNavItems(isAdmin: boolean, isAdminRoute: boolean) {
         : isAdmin
             ? [
                 { href: '/dashboard', icon: 'fa-home', label: 'Dashboard' },
-                { href: '/dashboard/records', icon: 'fa-table', label: 'Records' },
+                { href: '/dashboard/feeding', icon: 'fa-bone', label: 'Feeding Schedule' },
+                { href: '/dashboard/analytics', icon: 'fa-chart-line', label: 'Analytics' },
                 { href: '/dashboard/alerts', icon: 'fa-bell', label: 'Alerts' },
             ]
             : [
                 { href: '/dashboard', icon: 'fa-home', label: 'Dashboard' },
-                { href: '/dashboard/records', icon: 'fa-table', label: 'Records' },
+                { href: '/dashboard/feeding', icon: 'fa-bone', label: 'Feeding Schedule' },
+                { href: '/dashboard/analytics', icon: 'fa-chart-line', label: 'Analytics' },
                 { href: '/dashboard/alerts', icon: 'fa-bell', label: 'Alerts' },
             ];
 }

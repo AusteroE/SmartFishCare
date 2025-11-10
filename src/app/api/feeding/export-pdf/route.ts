@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
             second: '2-digit',
         });
 
-        // Generate HTML report matching PHP version
+        // Generate HTML report for feeding schedule only
         const htmlContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
         }
         th, td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 12px;
             text-align: left;
             word-wrap: break-word;
             word-break: break-word;
@@ -121,6 +121,10 @@ export async function GET(request: NextRequest) {
         th {
             background-color: #f5f5f5;
             font-weight: bold;
+            text-align: center;
+        }
+        td {
+            text-align: center;
         }
         .no-data {
             text-align: center;
@@ -218,7 +222,7 @@ export async function GET(request: NextRequest) {
         return new NextResponse(htmlContent, {
             headers: {
                 'Content-Type': 'text/html; charset=utf-8',
-                'Content-Disposition': 'inline; filename="fish-care-report.html"',
+                'Content-Disposition': 'inline; filename="feeding-schedule-report.html"',
             },
         });
     } catch (error: any) {

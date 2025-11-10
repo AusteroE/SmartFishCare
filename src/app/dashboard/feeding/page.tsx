@@ -93,10 +93,18 @@ export default function FeedingPage() {
           className="mx-auto mb-2 w-16 h-16 sm:w-20 sm:h-20 md:w-[120px] md:h-[120px]"
           priority
         />
-        <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-[#7c5cff] flex items-center justify-center gap-2 sm:gap-4">
-          <i className="fas fa-arrow-left cursor-pointer p-1.5 sm:p-2 rounded-full transition-all hover:bg-white/10 hover:scale-110 text-base sm:text-lg md:text-xl" onClick={() => router.push('/dashboard/records')} title="Back to Records"></i>
-          <span className="leading-tight">Feeding Schedule Management</span>
+        <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-[#7c5cff] mb-3 sm:mb-4 px-2 leading-tight">
+          Feeding Schedule Management
         </h2>
+        <div className="mt-3 sm:mt-4 md:mt-5">
+          <button
+            onClick={() => window.open('/api/feeding/export-pdf', '_blank')}
+            className="inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 bg-linear-to-r from-[#667eea] to-[#764ba2] border-none rounded-xl text-white text-xs sm:text-sm font-semibold cursor-pointer transition-all duration-300 shadow-[0_4px_15px_rgba(102,126,234,0.3)] hover:translate-y-[-2px] hover:shadow-[0_6px_20px_rgba(102,126,234,0.4)] w-full max-w-xs sm:w-auto"
+          >
+            <i className="fas fa-file-pdf text-sm sm:text-base"></i>
+            <span>Generate Report</span>
+          </button>
+        </div>
       </header>
 
       <div className="bg-gradient-to-b from-white/6 to-white/2 border border-white/8 rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-8 backdrop-blur-sm shadow-[0_10px_30px_rgba(0,0,0,0.35)] mb-4 sm:mb-6">

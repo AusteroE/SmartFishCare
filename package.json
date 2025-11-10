@@ -13,6 +13,8 @@
     "db:studio": "prisma studio",
     "start:all": "node scripts/start-all.js",
     "dev:all": "node scripts/start-all.js",
+    "python:server": "node scripts/start-python-server.js",
+    "python:setup": "cd backend && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt",
     "apk:build": "node scripts/build-apk.js debug",
     "apk:build-release": "node scripts/build-apk.js release",
     "apk:init": "bubblewrap init --manifest=https://smartfishcare.site/manifest.json --config=twa-manifest.json",
@@ -31,6 +33,7 @@
     "prisma": "^6.18.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
+    "recharts": "^3.3.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

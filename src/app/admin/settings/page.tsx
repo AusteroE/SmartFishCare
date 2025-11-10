@@ -39,7 +39,7 @@ export default function AdminSettingsPage() {
         })
             .then((res) => {
                 if (res.status === 401 || res.status === 403) {
-                    router.push('/admin/dashboard');
+                    router.push('/admin/settings');
                     return null;
                 }
                 return res.json();
@@ -52,11 +52,11 @@ export default function AdminSettingsPage() {
                     setPhoneNumber(data.user.phone_number || '');
                     setNewPhoneNumber(data.user.phone_number || '');
                 } else {
-                    router.push('/admin/dashboard');
+                    router.push('/admin/settings');
                 }
             })
             .catch(() => {
-                router.push('/admin/dashboard');
+                router.push('/admin/settings');
             })
             .finally(() => setLoading(false));
     }, [router]);

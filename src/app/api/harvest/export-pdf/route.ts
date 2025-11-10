@@ -19,10 +19,55 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
         }
 
-        // Fetch only feeding records data
-        const feedingRecords = await prisma.feedingRecord.findMany({
-            where: { userId },
-            orderBy: { feedingTime: 'asc' }
+        // Get period from query params
+        const { searchParams } = new URL(request.url);
+        const period = searchParams.get('period') || 'week';
+
+        // Calculate date range based on period
+        const now = new Date();
+        let startDate: Date;
+        let periodLabel: string;
+
+        switch (period) {
+            case 'day':
+                startDate = new Date(now);
+                startDate.setDate(startDate.getDate() - 7);
+                periodLabel = 'Last 7 Days';
+                break;
+            case 'week':
+                startDate = new Date(now);
+                startDate.setDate(startDate.getDate() - 30);
+                periodLabel = 'Last 30 Days (Weekly)';
+                break;
+            case 'month':
+                startDate = new Date(now);
+                startDate.setMonth(startDate.getMonth() - 12);
+                periodLabel = 'Last 12 Months';
+                break;
+            case 'year':
+                startDate = new Date(now);
+                startDate.setFullYear(startDate.getFullYear() - 5);
+                periodLabel = 'Last 5 Years';
+                break;
+            default:
+                startDate = new Date(now);
+                startDate.setDate(startDate.getDate() - 30);
+                periodLabel = 'Last 30 Days';
+        }
+
+        // Fetch large fish detections (ready to harvest)
+        const fishDetections = await prisma.fishDetection.findMany({
+            where: {
+                userId: userId,
+                sizeCategory: 'Large', // Only large fish ready to harvest
+                detectionTimestamp: {
+                    gte: startDate,
+                    lte: now,
+                },
+            },
+            orderBy: {
+                detectionTimestamp: 'desc',
+            },
         });
 
         const timestamp = new Date().toLocaleString('en-US', {
@@ -34,13 +79,22 @@ export async function GET(request: NextRequest) {
             second: '2-digit',
         });
 
-        // Generate HTML report matching PHP version
+        // Calculate totals
+        const totalCount = fishDetections.length;
+        const avgLength = totalCount > 0
+            ? Number((fishDetections.reduce((sum, d) => sum + Number(d.detectedLength), 0) / totalCount).toFixed(2))
+            : 0;
+        const avgWidth = totalCount > 0
+            ? Number((fishDetections.reduce((sum, d) => sum + Number(d.detectedWidth), 0) / totalCount).toFixed(2))
+            : 0;
+
+        // Generate HTML report
         const htmlContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Feeding Schedule Report</title>
+    <title>Harvest Report</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -103,6 +157,30 @@ export async function GET(request: NextRequest) {
             border-bottom: 1px solid #ccc;
             padding-bottom: 5px;
         }
+        .summary {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .summary-item {
+            flex: 1;
+            min-width: 150px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .summary-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .summary-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #0e4d92;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -111,7 +189,7 @@ export async function GET(request: NextRequest) {
         }
         th, td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 12px;
             text-align: left;
             word-wrap: break-word;
             word-break: break-word;
@@ -121,6 +199,10 @@ export async function GET(request: NextRequest) {
         th {
             background-color: #f5f5f5;
             font-weight: bold;
+            text-align: center;
+        }
+        td {
+            text-align: center;
         }
         .no-data {
             text-align: center;
@@ -128,16 +210,16 @@ export async function GET(request: NextRequest) {
             font-style: italic;
             padding: 20px;
         }
-        .feeding-table th:nth-child(1),
-        .feeding-table td:nth-child(1) { width: 15%; }
-        .feeding-table th:nth-child(2),
-        .feeding-table td:nth-child(2) { width: 30%; }
-        .feeding-table th:nth-child(3),
-        .feeding-table td:nth-child(3) { width: 20%; }
-        .feeding-table th:nth-child(4),
-        .feeding-table td:nth-child(4) { width: 20%; }
-        .feeding-table th:nth-child(5),
-        .feeding-table td:nth-child(5) { width: 15%; }
+        .harvest-table th:nth-child(1),
+        .harvest-table td:nth-child(1) { width: 20%; }
+        .harvest-table th:nth-child(2),
+        .harvest-table td:nth-child(2) { width: 20%; }
+        .harvest-table th:nth-child(3),
+        .harvest-table td:nth-child(3) { width: 20%; }
+        .harvest-table th:nth-child(4),
+        .harvest-table td:nth-child(4) { width: 20%; }
+        .harvest-table th:nth-child(5),
+        .harvest-table td:nth-child(5) { width: 20%; }
         @media print {
             body { margin: 0; }
             .no-print { display: none; }
@@ -148,6 +230,7 @@ export async function GET(request: NextRequest) {
             .logo-container { flex-direction: column; gap: 15px; }
             .header-center { padding: 0; }
             .logo-left, .logo-right, .logo-right-img { max-width: 100px; }
+            .summary { flex-direction: column; }
         }
     </style>
 </head>
@@ -156,8 +239,9 @@ export async function GET(request: NextRequest) {
         <div class="logo-container">
             <img src="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/smartfishcarelogo.png" alt="Smart Fish Care Logo" class="logo-left" onerror="this.style.display='none'">
             <div class="header-center">
-                <div class="report-title">Feeding Schedule Report</div>
+                <div class="report-title">Harvest Report</div>
                 <div class="user-info">Generated for: ${escapeHtml(user.username)} (${escapeHtml(user.email)})</div>
+                <div class="user-info">Period: ${periodLabel}</div>
                 <div class="user-info">Generated on: ${timestamp}</div>
             </div>
             <div class="logo-right">
@@ -167,34 +251,53 @@ export async function GET(request: NextRequest) {
     </div>
     
     <div class="section">
-        <div class="section-title">Feeding Schedule</div>
-        ${feedingRecords.length > 0 ? `
-            <table class="feeding-table">
+        <div class="section-title">Summary</div>
+        <div class="summary">
+            <div class="summary-item">
+                <div class="summary-label">Total Large Fish</div>
+                <div class="summary-value">${totalCount}</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Avg Length (cm)</div>
+                <div class="summary-value">${avgLength.toFixed(2)}</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Avg Width (cm)</div>
+                <div class="summary-value">${avgWidth.toFixed(2)}</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Total Records</div>
+                <div class="summary-value">${fishDetections.length}</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">Large Fish Ready to Harvest</div>
+        ${fishDetections.length > 0 ? `
+            <table class="harvest-table">
                 <thead>
                     <tr>
-                        <th>Fish Size</th>
-                        <th>Food Type</th>
-                        <th>Feeding Time</th>
-                        <th>Quantity</th>
-                        <th>Notes</th>
+                        <th>Detection Date</th>
+                        <th>Length (cm)</th>
+                        <th>Width (cm)</th>
+                        <th>Size Category</th>
+                        <th>Confidence</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${feedingRecords.map(record => `
+                    ${fishDetections.map(detection => `
                         <tr>
-                            <td>${escapeHtml(record.fishSize)}</td>
-                            <td>${escapeHtml(record.foodType)}</td>
-                            <td>${escapeHtml(String(record.feedingTime))}</td>
-                            <td>${record.quantity ?? 'N/A'}</td>
-                            <td>${record.notes ? escapeHtml(record.notes) : 'N/A'}</td>
+                            <td>${formatDate(detection.detectionTimestamp)}</td>
+                            <td>${Number(detection.detectedLength).toFixed(2)}</td>
+                            <td>${Number(detection.detectedWidth).toFixed(2)}</td>
+                            <td>${escapeHtml(detection.sizeCategory)}</td>
+                            <td>${detection.confidenceScore ? (Number(detection.confidenceScore) * 100).toFixed(1) + '%' : 'N/A'}</td>
                         </tr>
                     `).join('')}
                 </tbody>
             </table>
-            <div style="margin-top: 20px; padding: 10px; background-color: #f9f9f9; border-radius: 5px;">
-                <strong>Total Records:</strong> ${feedingRecords.length}
-            </div>
-        ` : '<div class="no-data">No feeding records found.</div>'}
+        ` : '<div class="no-data">No large fish detection records found for the selected period.</div>'}
     </div>
     
     <div class="no-print" style="text-align: center; margin-top: 30px;">
@@ -218,7 +321,7 @@ export async function GET(request: NextRequest) {
         return new NextResponse(htmlContent, {
             headers: {
                 'Content-Type': 'text/html; charset=utf-8',
-                'Content-Disposition': 'inline; filename="fish-care-report.html"',
+                'Content-Disposition': 'inline; filename="harvest-report.html"',
             },
         });
     } catch (error: any) {
@@ -238,5 +341,14 @@ function escapeHtml(text: string | null | undefined): string {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+function formatDate(date: Date | string): string {
+    const d = typeof date === 'string' ? new Date(date) : date;
+    return d.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
 }
 
