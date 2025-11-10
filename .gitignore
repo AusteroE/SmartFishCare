@@ -4,7 +4,6 @@
 /node_modules
 /.pnp
 .pnp.js
-.yarn/install-state.gz
 
 # testing
 /coverage
@@ -38,3 +37,32 @@ next-env.d.ts
 
 # prisma
 /prisma/migrations
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+backend/venv/
+backend/env/
+backend/.venv/
+*.egg-info/
+dist/
+build/
+
+# Model files (large)
+*.pb
+*.h5
+*.ckpt
+*.pth
+*.onnx
+public/models/
+backend/models/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
